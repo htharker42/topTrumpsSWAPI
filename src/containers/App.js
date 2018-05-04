@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import './App.css';
-import Gameboard from '../components/gameBoard'
+import Card from '../components/card'
 
 class App extends Component {
   constructor(props){
@@ -12,8 +12,8 @@ class App extends Component {
       players: 2,
       playerChoiceKey: "",
       playerDeckSize: 0,
-      playerDeck: [],
-      aiDeck: [],
+      player0Deck: [],
+      player1Deck: [],
       card: 0,
     }
   }
@@ -32,8 +32,8 @@ class App extends Component {
       let deck = this.stackDeck(results);
       this.setState({
                       results: results, 
-                      playerDeck: deck[0], 
-                      aiDeck: deck[1], 
+                      player0Deck: deck[0], 
+                      player1Deck: deck[1], 
                       playerDeckSize: deck[0].length,
                       hasRun: true});
                   })
@@ -74,7 +74,6 @@ cutDeck(deck){
     let count = 0;
     let end = cardsPerPlayer;
     let splitDeck = [];
-    let player = "";
 
       while (count < players)
         {     
@@ -85,27 +84,95 @@ cutDeck(deck){
         }
     return(splitDeck);
 }
+  
+advanceCard(card){
+
+  const { playerDeckSize } = this.state;
+  let nextCard = card;
+                               //reset if end of deck is reached
+    (card !== (playerDeckSize))? nextCard += 1 : nextCard = 0; 
+  return(nextCard);
+}
 
   handleClick = (event) =>{
-    const { card, playerDeckSize } = this.state;
-    console.log(event.target.id, event.target.value)
-    let cardPrime = card;
-    (card === (playerDeckSize-1))? cardPrime += 1 : cardPrime = 0; 
-    console.log(card, cardPrime)
-    this.setState({ 
-                    playerChoiceKey: event.target.id, 
-                    playersChoice: event.target.value,
-                    card: cardPrime 
-                  })
+
+    const { card, playerDeckSize, player0Deck, player1Deck } = this.state;
+    
+    let winner = this.compareItems(player0Deck[card][event.target.id] ,player1Deck[card][event.target.id])
+
+    this.moveCards( winner, event.target.id )
+
+    this.setState({card: this.advanceCard(card)})
+
+
   }
 
+  compareItems=(item1, item2)=>{
+    let winner;
+
+    item1 >= item2 ? winner = 0 : winner=1;
+    
+   return (winner)
+  }
+
+  moveCards(winner, key){
+    const {player0Deck, card, player1Deck} = this.state;
+    let cardToTransfer;
+    let deck0 = player0Deck;
+    let deck1 = player1Deck; 
+
+    if (winner === 0){
+      cardToTransfer = player1Deck[card];
+      deck0.push(cardToTransfer);
+      deck1.splice(card, 1 );
+
+    }else{
+      cardToTransfer = player0Deck[card];
+      deck1.push(cardToTransfer);
+      deck0.splice(card, 1);
+    }
+
+    this.setState({player0Deck: deck0,
+                    player1Deck: deck1,
+                    playerDeckSize: deck0.length})
+  }
+
+
+
   render() {
-    const { results, hasRun, players, card, playerDeckSize } = this.state;
+    const { results, hasRun, card, playerDeckSize } = this.state;
     let deck = [];
     hasRun? deck = this.stackDeck(results) : console.log("loading");
     let playerHand=deck[0];
     let aiHand = deck[1];
-  
+
+    const playDeck = () =>{
+      return(
+            <div className="fl w-100 tc">
+              <div className="fl w-50">
+              <Card
+                key={1}
+                name={playerHand[card].name}
+                manufact={playerHand[card].manufacturer}
+                length={playerHand[card].length}
+                itemClass={playerHand[card].starship_class}
+                selectItem = {this.handleClick}
+                />
+              </div>
+              <div className="fl w-50">
+              <Card
+                key={1}
+                name={aiHand[card].name}
+                manufact={aiHand[card].manufacturer}
+                length={aiHand[card].length}
+                itemClass={aiHand[card].starship_class}
+                selectItem = {this.handleClick}
+                />
+            </div>
+          </div> 
+        )
+    }
+
     return (
       <div className="fl w-100 bg-lightest-blue">
         <header className="App-header tc">
@@ -113,11 +180,7 @@ cutDeck(deck){
          <h2>Card: {card} of {playerDeckSize} </h2>
         </header>
 
-        { 
-          hasRun ? 
-            <Gameboard card={card} playerHand={playerHand} aiHand={aiHand} selectItem={this.handleClick}/> : 
-            <h1> Building Deck </h1>
-        }
+        { hasRun?  playDeck()  : <h1> Building Deck</h1> }
       
       </div>
     );
