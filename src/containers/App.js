@@ -94,6 +94,23 @@ advanceCard(card){
   return(nextCard);
 }
 
+gameOver(){
+  const {playerDeckSize, players} = this.state;
+  if (playerDeckSize === 0 || playerDeckSize === (playerDeckSize * players)) {
+    return true; 
+  }else{
+    return false; 
+  }
+
+}
+
+sanitizeResults=(value)=>{
+
+value === undefined? value = 0 : value;
+
+  return (value);
+}
+
   handleClick = (event) =>{
 
     const { card, playerDeckSize, player0Deck, player1Deck } = this.state;
@@ -101,9 +118,10 @@ advanceCard(card){
     let winner = this.compareItems(player0Deck[card][event.target.id] ,player1Deck[card][event.target.id])
 
     this.moveCards( winner, event.target.id )
-
-    this.setState({card: this.advanceCard(card)})
-
+    //check to see if last move ended game
+    //TODO print GameOver to board; 
+    this.gameOver()? console.log("gameOver") 
+      :this.setState({card: this.advanceCard(card)})
 
   }
 
@@ -140,11 +158,8 @@ advanceCard(card){
 
 
   render() {
-    const { results, hasRun, card, playerDeckSize } = this.state;
-    let deck = [];
-    hasRun? deck = this.stackDeck(results) : console.log("loading");
-    let playerHand=deck[0];
-    let aiHand = deck[1];
+    const { player0Deck, player1Deck, results, hasRun, card, playerDeckSize } = this.state;
+    
 
     const playDeck = () =>{
       return(
@@ -152,21 +167,23 @@ advanceCard(card){
               <div className="fl w-50">
               <Card
                 key={1}
-                name={playerHand[card].name}
-                manufact={playerHand[card].manufacturer}
-                length={playerHand[card].length}
-                itemClass={playerHand[card].starship_class}
+                name={player0Deck[card].name}
+                manufact={player0Deck[card].manufacturer}
+                length={player0Deck[card].length}
+                crew={player0Deck[card].crew}
+                passengers={player0Deck[card].passengers}
+                cargo={player0Deck[card].cargo_capacity}
+                consumables={player0Deck[card].consumables}
+                hyperdrive={player0Deck[card].hyperdrive_rating}
+                itemClass={player0Deck[card].starship_class}
+                player = {true}
                 selectItem = {this.handleClick}
                 />
               </div>
               <div className="fl w-50">
               <Card
                 key={1}
-                name={aiHand[card].name}
-                manufact={aiHand[card].manufacturer}
-                length={aiHand[card].length}
-                itemClass={aiHand[card].starship_class}
-                selectItem = {this.handleClick}
+                player = {false}
                 />
             </div>
           </div> 
